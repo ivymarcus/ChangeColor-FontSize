@@ -62,12 +62,15 @@ https://codertw.com/%E5%89%8D%E7%AB%AF%E9%96%8B%E7%99%BC/263160/ -->
                 var CurrenEditItem = [];
 
                 for (let i = 0; i < schedule.length; i++) {
-                    if (schedule[i][0] == this.id) {
-                        CurrenEditItem.push(schedule[i][1]);
+                    if (schedule[i][1] == this.id) {
+                        CurrenEditItem.push(schedule[i][2]);
                         //index = i;
                         //currentID = this.id;
                     }
                 }
+
+                //let tdHtml = $(`#${this.id}`);
+                //console.log("tdHtml", tdHtml);
                 console.log("this.id", this.id);
                 // console.log("index", index);
                 console.log("CurrenEditItem", CurrenEditItem);
@@ -167,6 +170,8 @@ https://codertw.com/%E5%89%8D%E7%AB%AF%E9%96%8B%E7%99%BC/263160/ -->
             GetCalender(currentMonth, currentYear);
         }
 
+        // --------------------------------------------------------------------------------------------
+
         // 按鈕(新增) - 顯示 Modal 視窗
         function BtnModalWindowAdd() {
             // 顯示 Modal 視窗
@@ -184,13 +189,14 @@ https://codertw.com/%E5%89%8D%E7%AB%AF%E9%96%8B%E7%99%BC/263160/ -->
             console.log("Modal_date:", date);
             console.log("Modal_thisID", thisID);
             console.log("thisNewItem", thisNewItem);
-            console.log("schedule.length", schedule.length);
+            // console.log("schedule.length", schedule.length);
 
             // 將 日期的 ID 和 事項內容 加入 "schedule 陣列"
             // 然後再將一維陣列的成員定義成陣列（之所以可以進行再定義，因為JavaScript是弱型別）
             schedule[index] = new Array();
-            schedule[index][0] = thisID;
-            schedule[index][1] = thisNewItem;
+            schedule[index][0] = thisDay; // 當天日期
+            schedule[index][1] = thisID; // ID
+            schedule[index][2] = thisNewItem; // 事件
             index++;
 
             console.log("schedule[]:", schedule);
@@ -213,31 +219,107 @@ https://codertw.com/%E5%89%8D%E7%AB%AF%E9%96%8B%E7%99%BC/263160/ -->
         // Modal(日期 修改/刪除) 按鈕 - "修改"
         function Modal_Btn_Update() {
             //var UpdateItem = [$('#Modal_EditDate').val(), $('#Modal_EditItem').val()]; // 取的 "日期" 和 "新的事項"
-            let UpdateID = $('#Modal_EditDate').val();
-            let UpdateItem = $('#Modal_EditItem').val();
+            let EditID = $('#Modal_EditDate').val();
+            let EditItem = $('#Modal_EditItem').val(); // 編輯(更新) 的事件
 
-            let aa = $(`#${UpdateID}`).html();
+            let Day;
+            let saveI; // 儲存 i的值
 
-            console.log("aa:", aa);
-            console.log("sc:", schedule[0][1]);
-            aa = aa.replace(schedule[0][1], UpdateItem);
-            console.log("Updateaa:", aa);
+            //console.log("schedule.length", schedule.length);
+            // for (let i = 0; i <= schedule.length - 1; i++) {
+            //     let count = 0;
+            //     if (schedule[i][1] === EditID) {
+            //         saveI = i;
+            //         Day = schedule[i][0];
 
-            Data_Add(UpdateID, UpdateItem);
-            //DeleteItem(index); // 先刪除 原本事項
-            //schedule.push(UpdateItem); // 改換成 新的事項
+            //         $(`#${EditID}`).html(''); // 將 此ID的 html 清空 
+
+            //         let tdHtml = Day + $('#Modal_EditItem').val();
+            //         $(`#${EditID}`).html(tdHtml);
+            //         schedule[saveI][2] = $('#Modal_EditItem').val(); // 更改 schedule[?][2] 事件
+            //         console.log("tdHtml:", tdHtml);
+            //     }
+
+            // } //
+
+            var pause = false;
+            var count = 0;
+            while (!pause) {
+                // 當 schedule 沒有行程時
+                if (schedule.length == 0) {
+                    schedule[index] = new Array();
+                    schedule[index][0] = $(`#${EditID}`).html();
+                    schedule[index][1] = EditID;
+                    schedule[index][2] = EditItem;
+                    //console.log("scheduleTest",schedule);
+
+                    Data_Add(schedule[index][1], schedule[index][2]);
+                    index++;
+                    //pause = true;
+                    break;
+                }
+
+                //console.log("schedule.length",schedule.length);
+                for (let i = 0; i < schedule.length; i++) {
+                    // var count = 0;
+                    if (schedule[i][1] == EditID) {
+                        saveI = i;
+                        Day = schedule[i][0];
+
+                        $(`#${EditID}`).html(''); // 將 此ID的 html 清空 
+
+                        let tdHtml = Day + $('#Modal_EditItem').val();
+                        $(`#${EditID}`).html(tdHtml);
+                        schedule[saveI][2] = $('#Modal_EditItem').val(); // 更改 schedule[?][2] 事件
+                        console.log("tdHtml:", tdHtml);
+
+                        pause = true;
+                        //break;
+                    } //
+                    else {
+                        count++;
+                    }
+
+
+                }
+
+                console.log("schedule.length", schedule.length);
+                console.log("count", count);
+                if (count == schedule.length) {
+                    schedule[index] = new Array();
+                    schedule[index][0] = $(`#${EditID}`).html(); // 當天日期
+                    schedule[index][1] = EditID; // ID
+                    schedule[index][2] = EditItem; // 事件
+                    //console.log("scheduleTest2", schedule);
+                    Data_Add(schedule[index][1], schedule[index][2]);
+                    index++;
+                    pause = true;
+                    //break;
+                }
+
+            }
 
         }
 
         // Modal(日期 修改/刪除) 按鈕 - "刪除"
         function Modal_Btn_Delete() {
-            //var UpdateItem = [$('#Modal_EditDate').val(), $('#Modal_EditItem').val()]; // 取的 "日期" 和 "新的事項"
-            DeleteItem(index);
-        }
+            let EditID = $('#Modal_EditDate').val();
 
-        // 刪除該筆資料
-        function DeleteItem(index) {
-            schedule.splice(index, 1);
+            let Day;
+            let saveI; // 儲存 i的值
+            for (let i = 0; i < schedule.length; i++) {
+                if (schedule[i][1] == EditID) {
+                    saveI = i;
+                    Day = schedule[i][0];
+
+                    $(`#${EditID}`).html(''); // 將 此ID的 html 清空 
+                    $(`#${EditID}`).html(Day); // 把日期擺進去
+                    schedule[saveI][2] = ""; // 更改 schedule[?][2] 為空
+                }
+            }
+
+
+
         }
     </script>
 
@@ -341,7 +423,8 @@ https://codertw.com/%E5%89%8D%E7%AB%AF%E9%96%8B%E7%99%BC/263160/ -->
                     <form>
                         <label>日期:</label>
                         <input type="text" class="form-control" id="Modal_EditDate" readonly>
-                        <label>事項:</label>
+                        <!-- &lt;br/&gt; => <br/> -->
+                        <label>事項(換行 + &lt;br/&gt;):</label>
                         <input type="textarea" class="form-control" id="Modal_EditItem">
                     </form>
                 </div>
