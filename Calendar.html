@@ -5,7 +5,7 @@ https://ithelp.ithome.com.tw/articles/10186932
 https://codertw.com/%E5%89%8D%E7%AB%AF%E9%96%8B%E7%99%BC/263160/ -->
 
 
-<!-- ////////////////////////// 處理 Modal視窗 裡的事件 ////////////////////////// -->
+<!-- ////////////////////////// localStorage ////////////////////////// -->
 
 <head>
     <meta charset="UTF-8">
@@ -32,8 +32,13 @@ https://codertw.com/%E5%89%8D%E7%AB%AF%E9%96%8B%E7%99%BC/263160/ -->
         var currentMonth = today.getMonth(); // 當前月份
         var currentYear = today.getFullYear(); // 當前年份
 
-        // var schedule = [];
+
         // 在JavaScript中不能通過直接定義實現多維陣列，那麼該怎麼實現呢？
+
+        // ? = index ， schedule[?][0~2] 代表 有一個儲存 的事件
+        // schedule[?][0] = 日期     (12)
+        // schedule[?][1] = ID       (2019-11-12)
+        // schedule[?][2] = 事件     (<br/> 上課)
 
         var schedule = new Array(); // 首先定義一維陣列:
         // schedule[0] = new Array();  // 然後再將一維陣列的成員定義成陣列（之所以可以進行再定義，因為JavaScript是弱型別）
@@ -46,7 +51,9 @@ https://codertw.com/%E5%89%8D%E7%AB%AF%E9%96%8B%E7%99%BC/263160/ -->
 
         $(document).ready(function () {
             // 製作月曆表格
-            GetCalender(currentMonth, currentYear);
+            //GetCalender(currentMonth, currentYear);
+            // 載入
+            LoadData()
 
             // 按鈕 - 上/下個月
             $("#BtnPrevious").click(BtnPrevious);
@@ -88,9 +95,35 @@ https://codertw.com/%E5%89%8D%E7%AB%AF%E9%96%8B%E7%99%BC/263160/ -->
             // Modal(日期 修改/刪除) 按鈕 - "刪除"
             $("#Modal_Btn_Delete").click(Modal_Btn_Delete);
 
+
+
         });
 
-        // 製作月曆表格
+        // 儲存資料
+        function SaveData() {
+            // 序列化，轉成字串格式，保存起來 (若不保存，下一次執行時會被清空，只有預設資料dat)
+            var str = JSON.stringify(schedule);
+            localStorage.setItem('Calendar', str);
+            console.log("str", str);
+        }
+
+        // 載入資料
+        function LoadData() {
+            if (localStorage.getItem('Calendar') != null) {
+                var str = localStorage.getItem('Calendar');
+                // 取回資料(反序列化，json的格式)
+                schedule = JSON.parse(str);
+            }
+            
+            //schedule.length = 0;      // 清空陣列(若有陣列裡有null值 或 其他原因)
+            index = schedule.length;
+            console.log("index:",index);
+            console.log("schedule",schedule);
+            // 更新資料(若第一次執行，則只有"一般日曆")
+            GetCalender(currentMonth, currentYear);
+        }
+
+        // 製作月曆表格(更新資料)
         function GetCalender(month, year) {
             // 設定當前的月、年
             $("#Month").text(month + 1 + "月");
@@ -102,10 +135,12 @@ https://codertw.com/%E5%89%8D%E7%AB%AF%E9%96%8B%E7%99%BC/263160/ -->
             // console.log("firstDay", firstDay);
             // console.log("daysInMonth",daysInMonth)
 
-            // 清空
+            // 清空(Clear)
             table.innerHTML = "";
 
-            // 創建表格
+
+
+            // 創建表格(Draw)
             let date = 1;
             for (let i = 0; i < 6; i++) {
                 // 創建 table 的 row (6週，因為如果 當月有31天 且 第一天在"星期六"，會有6週)
@@ -126,6 +161,7 @@ https://codertw.com/%E5%89%8D%E7%AB%AF%E9%96%8B%E7%99%BC/263160/ -->
                         let cell = document.createElement("td");
                         let cellText = document.createTextNode(date);
                         cell.id = `${year}-${month + 1}-${date}`;
+                        let Id = cell.id;
 
 
                         // 在今日放顏色
@@ -141,8 +177,22 @@ https://codertw.com/%E5%89%8D%E7%AB%AF%E9%96%8B%E7%99%BC/263160/ -->
                 // 真正 將表格放入 html
                 table.appendChild(row);
             }
+
+
+            // 放入行程schedule[][]
+            //index = schedule.length - 1;    // 載入後 index 變為0
+            for (let i = 0; i < schedule.length; i++) {
+                let Id = schedule[i][1];
+                let Item = schedule[i][2];
+                Data_Add(Id, Item);
+            }
+
         }
 
+        
+        // --------------------------------------------------------------------------------------------
+        
+        
         // 按鈕 - 下個月
         function BtnNext() {
             // 12月時
@@ -172,11 +222,18 @@ https://codertw.com/%E5%89%8D%E7%AB%AF%E9%96%8B%E7%99%BC/263160/ -->
 
         // --------------------------------------------------------------------------------------------
 
+        // 將事項 加入日期
+        function Data_Add(thisID, thisNewItem) {
+            $(`#${thisID}`).append(`${thisNewItem}`);
+        }
+
+
         // 按鈕(新增) - 顯示 Modal 視窗
         function BtnModalWindowAdd() {
             // 顯示 Modal 視窗
             $('#Modal_AddNewDataWindows').modal();
         }
+
 
         // Modal(新增) 按鈕 - 新增
         function Modal_Btn_AddNewData() {
@@ -197,9 +254,10 @@ https://codertw.com/%E5%89%8D%E7%AB%AF%E9%96%8B%E7%99%BC/263160/ -->
             schedule[index][0] = thisDay; // 當天日期
             schedule[index][1] = thisID; // ID
             schedule[index][2] = thisNewItem; // 事件
-            index++;
+            //index++;
 
             console.log("schedule[]:", schedule);
+            console.log("index", index);
 
             // 加入
             Data_Add(thisID, thisNewItem);
@@ -208,12 +266,15 @@ https://codertw.com/%E5%89%8D%E7%AB%AF%E9%96%8B%E7%99%BC/263160/ -->
             $("#Modal_NewDate").val('');
             $('#Modal_NewItem').val('');
 
+            // 儲存資料
+            SaveData();
+            // 載入資料
+            LoadData();
+
         }
 
-        // 將事項 加入日期
-        function Data_Add(thisID, thisNewItem) {
-            $(`#${thisID}`).append(`${thisNewItem}`);
-        }
+
+        // --------------------------------------------------------------------------------------------
 
 
         // Modal(日期 修改/刪除) 按鈕 - "修改"
@@ -224,23 +285,6 @@ https://codertw.com/%E5%89%8D%E7%AB%AF%E9%96%8B%E7%99%BC/263160/ -->
 
             let Day;
             let saveI; // 儲存 i的值
-
-            //console.log("schedule.length", schedule.length);
-            // for (let i = 0; i <= schedule.length - 1; i++) {
-            //     let count = 0;
-            //     if (schedule[i][1] === EditID) {
-            //         saveI = i;
-            //         Day = schedule[i][0];
-
-            //         $(`#${EditID}`).html(''); // 將 此ID的 html 清空 
-
-            //         let tdHtml = Day + $('#Modal_EditItem').val();
-            //         $(`#${EditID}`).html(tdHtml);
-            //         schedule[saveI][2] = $('#Modal_EditItem').val(); // 更改 schedule[?][2] 事件
-            //         console.log("tdHtml:", tdHtml);
-            //     }
-
-            // } //
 
             var pause = false;
             var count = 0;
@@ -254,11 +298,12 @@ https://codertw.com/%E5%89%8D%E7%AB%AF%E9%96%8B%E7%99%BC/263160/ -->
                     //console.log("scheduleTest",schedule);
 
                     Data_Add(schedule[index][1], schedule[index][2]);
-                    index++;
+                    //index++;
                     //pause = true;
                     break;
                 }
 
+                // 當 schedule 有行程時(裡面有值)
                 //console.log("schedule.length",schedule.length);
                 for (let i = 0; i < schedule.length; i++) {
                     // var count = 0;
@@ -283,6 +328,8 @@ https://codertw.com/%E5%89%8D%E7%AB%AF%E9%96%8B%E7%99%BC/263160/ -->
 
                 }
 
+                // 當 schedule 有行程時，要 修改(新增) 事件時。 
+                // 如果 count == schedule.length => 代表 schedule[i][1] 裡沒有ID
                 console.log("schedule.length", schedule.length);
                 console.log("count", count);
                 if (count == schedule.length) {
@@ -292,12 +339,16 @@ https://codertw.com/%E5%89%8D%E7%AB%AF%E9%96%8B%E7%99%BC/263160/ -->
                     schedule[index][2] = EditItem; // 事件
                     //console.log("scheduleTest2", schedule);
                     Data_Add(schedule[index][1], schedule[index][2]);
-                    index++;
+                    //index++;
                     pause = true;
                     //break;
                 }
 
             }
+            // 儲存資料
+            SaveData();
+            // 載入資料
+            LoadData();
 
         }
 
@@ -318,9 +369,13 @@ https://codertw.com/%E5%89%8D%E7%AB%AF%E9%96%8B%E7%99%BC/263160/ -->
                 }
             }
 
-
-
+            // 儲存資料
+            SaveData();
+            // 載入資料
+            LoadData();
         }
+
+
     </script>
 
 </head>
